@@ -155,7 +155,10 @@ def load_general_file(file):
             elif not line[:1].isdigit() and line[:1] != '-' and line[:1] != '+':
                 headers = line.replace("#",'').strip().split('\t')
             else:
-                data_point = [float(x) for x in line.split('\t')]
+                try:
+                    data_point = [float(x) for x in line.split('\t')]
+                except:
+                    print(f"Error in {file}")
                 formingData.append(np.array(data_point))
         if headers:
             headers = [h.strip() for h in headers]
@@ -275,12 +278,10 @@ def create_hdf_file(experimentName, experimentList):
             created_time = modified_time
         general_metadata = {"timestamp" : datetime.fromtimestamp(created_time),
                             "File Name" : file[:-4].split('\\')[-1]}
-        print(file,general_metadata["File Name"])
         fileName = file[:-4].split('\\')[-1]  # remove .dat from filename
-        fileName = re.sub(regex, '', fileName)
+        natName_ex = r'^[a-zA-Z_][a-zA-Z0-9_]*$'
+        fileName = re.sub(natName_ex, '', fileName)
         experimentName = re.sub(regex,'',experimentName)
-        print(f"experiment {experimentName}")
-        print(f"file: {fileName}")
         if '_IV' in file:
             general_metadata["measurement"] = "IV"
             metadata, headers, ivloops = load_IV_file(file)
@@ -332,7 +333,7 @@ def create_hdf_file(experimentName, experimentList):
 if __name__ == "__main__":
     # delete any preexisting hdf file before running this program
     # It will not rewrite the hdf file, but will append the file
-    path = "D:\ReRam Data\\testing"
+    path = "D:\ReRam Data\\tadaki"
     pathname = os.path.normpath(path)
 
     for root, dirs, files in os.walk(pathname):

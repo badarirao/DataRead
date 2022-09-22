@@ -32,6 +32,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 #TODO: Option to send the data and plot directly to originlab!
 #TODO: When plotting multiple selected plots, remove the title bar.
 #TODO: Editmetadata button activates even when a different item is single clicked, which does not load that item. The previous item is still active.
+#TODO: Add converter program into GUI
+#TODO: in multiple loops, loop number 10 comes after 1, instead of coming after 9.
+#TODO: When multiple plots are selected, the comment section should show the comments of the first item in the plot.
+#TODO: In comment section of switch experiment, add information about pulse width, limiting current, etc.
 
 class MplCanvas(FigureCanvasQTAgg):
 
@@ -99,6 +103,9 @@ class itemDetail:
             self.yAxis2 = 4
 
     def plot(self, canvas, vlegend=True, multiPlot = False):
+        if self.data.empty:
+            print("Empty dataset")
+            return
         if multiPlot == False:
             title = self.name
         else:

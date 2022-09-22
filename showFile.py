@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Plotter(object):
     def setupUi(self, Plotter):
         Plotter.setObjectName("Plotter")
-        Plotter.resize(1403, 1290)
+        Plotter.resize(1000, 600)
         self.centralwidget = QtWidgets.QWidget(Plotter)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout_3 = QtWidgets.QGridLayout(self.centralwidget)
@@ -45,7 +45,7 @@ class Ui_Plotter(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.plotTree.sizePolicy().hasHeightForWidth())
         self.plotTree.setSizePolicy(sizePolicy)
-        self.plotTree.setMinimumSize(QtCore.QSize(400, 700))
+        self.plotTree.setMinimumSize(QtCore.QSize(400, 600))
         self.plotTree.setDragEnabled(True)
         self.plotTree.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.plotTree.setObjectName("plotTree")
@@ -69,7 +69,7 @@ class Ui_Plotter(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.frame.sizePolicy().hasHeightForWidth())
         self.frame.setSizePolicy(sizePolicy)
-        self.frame.setMinimumSize(QtCore.QSize(0, 650))
+        self.frame.setMinimumSize(QtCore.QSize(0, 450))
         self.frame.setStyleSheet("")
         self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
