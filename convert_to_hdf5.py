@@ -5,7 +5,9 @@ import numpy as np
 from datetime import datetime
 import pandas as pd
 from tables import exceptions
+import re
 
+#TODO check if removing unicode characters from filename affects hdf5 file losing any stored data, due to same experiment name.
 def h5store(filename, df, keyName, mode, **kwargs):
     store = pd.HDFStore(filename, mode=mode)
     store.put(keyName, df)
@@ -30,6 +32,7 @@ def get_Measurement_list(folderPath):
     experiment_names : list
         names of experiment groups
     """
+    regex = r'[^A-Za-z0-9_:./\-\\]'
     # modify the delimiter in RV and switch file to tab. Some old files have , as the delimiter.
     # Also, if switch file is saved as .csv, change it to .dat (some old files are as .csv)
     allFileList = list(filter(os.path.isfile, glob.glob(folderPath + '\\*.*')))
@@ -70,6 +73,7 @@ def get_Measurement_list(folderPath):
             index = file.rindex('_Forming')
         else:
             index = -4
+        #file = re.sub(regex,'',file[:index])
         file = file[:index]
         experiment_names.append(file)
     experiment_names = list(dict.fromkeys(experiment_names))
@@ -248,6 +252,7 @@ def create_hdf_file(experimentName, experimentList):
 
     """
     mode = 'w'
+    regex = r'[^A-Za-z0-9_:./\-\\]'
     # if you want to append new data into existing file, set mode to append.
     # else overwrite the data into a fresh file.
     # It is okay to check only the first file, because experimentList contains oldest file first.
@@ -270,14 +275,18 @@ def create_hdf_file(experimentName, experimentList):
         if modified_time < created_time:
             created_time = modified_time
         general_metadata = {"timestamp" : datetime.fromtimestamp(created_time),
-                            "File Name" : file[-4].split('\\')[-1]}
-        print(file,general_metadata["timestamp"])
+                            "File Name" : file[:-4].split('\\')[-1]}
+        print(file,general_metadata["File Name"])
+        fileName = file[:-4].split('\\')[-1]  # remove .dat from filename
+        fileName = re.sub(regex, '', fileName)
+        experimentName = re.sub(regex,'',experimentName)
+        print(f"experiment {experimentName}")
+        print(f"file: {fileName}")
         if '_IV' in file:
             general_metadata["measurement"] = "IV"
             metadata, headers, ivloops = load_IV_file(file)
             metadata["Actual cycles measured"] = len(ivloops)
             metadata = {**general_metadata, **metadata} # merge the two metadatas
-            fileName = file[:-4].split('\\')[-1]  # remove .dat from filename
             loopNo = 1
             for loop in ivloops:
                 if len(ivloops) > 1:
@@ -296,7 +305,6 @@ def create_hdf_file(experimentName, experimentList):
             metadata, headers, rvloops = load_RV_file(file)
             metadata["Actual cycles measured"] = len(rvloops)
             metadata = {**general_metadata, **metadata} # merge the two metadatas
-            fileName = file[:-4].split('\\')[-1]  # remove .dat from filename
             loopNo = 1
             for loop in rvloops:
                 if len(rvloops) > 1:
@@ -318,7 +326,6 @@ def create_hdf_file(experimentName, experimentList):
                 general_metadata["measurement"] = "Forming"
             metadata, headers, measureData = load_general_file(file)
             metadata = {**general_metadata, **metadata} # merge the two metadatas
-            fileName = file[:-4].split('\\')[-1]  # remove .dat from filename
             df = pd.DataFrame(data=measureData, columns=headers)
             h5store(pathname+experimentName+'.h5', df, fileName, mode, **metadata)
         mode = 'a'
@@ -326,8 +333,9 @@ def create_hdf_file(experimentName, experimentList):
 if __name__ == "__main__":
     # delete any preexisting hdf file before running this program
     # It will not rewrite the hdf file, but will append the file
-    path = "D:\SGFO680_a2"
+    path = "D:\AFO6006"
     pathname = os.path.normpath(path)
+
     for root, dirs, files in os.walk(pathname):
         list_of_experiments, experiment_names = get_Measurement_list(root)
         if experiment_names:
