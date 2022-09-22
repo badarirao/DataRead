@@ -31,6 +31,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 #TODO: Option to save each plot in buffer, and it can be retrieved later for saving or further processing.
 #TODO: Option to send the data and plot directly to originlab!
 #TODO: When plotting multiple selected plots, remove the title bar.
+#TODO: Editmetadata button activates even when a different item is single clicked, which does not load that item. The previous item is still active.
 
 class MplCanvas(FigureCanvasQTAgg):
 

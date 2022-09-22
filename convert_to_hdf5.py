@@ -32,7 +32,6 @@ def get_Measurement_list(folderPath):
     experiment_names : list
         names of experiment groups
     """
-    regex = r'[^A-Za-z0-9_:./\-\\]'
     # modify the delimiter in RV and switch file to tab. Some old files have , as the delimiter.
     # Also, if switch file is saved as .csv, change it to .dat (some old files are as .csv)
     allFileList = list(filter(os.path.isfile, glob.glob(folderPath + '\\*.*')))
@@ -333,7 +332,7 @@ def create_hdf_file(experimentName, experimentList):
 if __name__ == "__main__":
     # delete any preexisting hdf file before running this program
     # It will not rewrite the hdf file, but will append the file
-    path = "D:\AFO6006"
+    path = "D:\ReRam Data\\testing"
     pathname = os.path.normpath(path)
 
     for root, dirs, files in os.walk(pathname):
