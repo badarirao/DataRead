@@ -36,6 +36,8 @@ from matplotlib.backends.backend_pdf import PdfPages
 #TODO: in multiple loops, loop number 10 comes after 1, instead of coming after 9.
 #TODO: When multiple plots are selected, the comment section should show the comments of the first item in the plot.
 #TODO: In comment section of switch experiment, add information about pulse width, limiting current, etc.
+#TODO: The horizontal scrollbar for listwidget does not show the full text of the item. Needs some adjustment.
+#TODO: Maybe it is better to display plot just by single click?
 
 class MplCanvas(FigureCanvasQTAgg):
 
