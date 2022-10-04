@@ -128,6 +128,12 @@ def extract_metadata(comments):
                 metadata[metD[0].replace('#', '').strip()] = metD[1].strip()
             else:
                 general_comment.append(metD)
+        elif ':' in comment:
+            metD = comment.split(':')
+            if len(metD) == 2:
+                metadata[metD[0].replace('#','').strip()] = metD[1].strip().replace(' ',' ,')
+            else:
+                general_comment.append(metD)
         else:
             general_comment.append(comment)
     metadata["Comments"] = '\n'.join(general_comment)
@@ -162,8 +168,28 @@ def load_general_file(file):
                 except:
                     print(f"Error in {file}")
                 formingData.append(np.array(data_point))
+        formingData = np.array(formingData)
         if headers:
             headers = [h.strip() for h in headers]
+        if "_Switch" in file:
+            try:
+                indexRV = headers.index("Read Voltage (V)")
+                uniqueRVs = ', '.join(map(str,np.unique(formingData[:,indexRV])))
+                comments.append(f"Read voltage used: {uniqueRVs}")
+            except:
+                pass
+            try:
+                indexPW = headers.index("Pulse Width (ms)")
+                uniquePWs = ', '.join(map(str,np.unique(formingData[:,indexPW])))
+                comments.append(f"Pulse width used: {uniquePWs}")
+            except:
+                pass
+            try:
+                indexCC = headers.index("Compliance current (A)")
+                uniqueCCs = ', '.join(map(str,np.unique(formingData[:,indexCC])))
+                comments.append(f"Compliance current set: {uniqueCCs}")
+            except:
+                pass
     return extract_metadata(comments), headers, formingData                
 
 def load_IV_file(file):
@@ -334,7 +360,7 @@ def create_hdf_file(experimentName, experimentList):
 if __name__ == "__main__":
     # delete any preexisting hdf file before running this program
     # It will not rewrite the hdf file, but will append the file
-    path = "D:\\ttest"
+    path = "D:\AFO6006"
     pathname = os.path.normpath(path)
 
     for root, dirs, files in os.walk(pathname):

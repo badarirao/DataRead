@@ -30,7 +30,6 @@ from matplotlib.backends.backend_pdf import PdfPages
 #TODO: Option to use the touch-pen to write something on the plot, and then it should be saved.
 #TODO: Option to save each plot in buffer, and it can be retrieved later for saving or further processing.
 #TODO: Option to send the data and plot directly to originlab!
-#TODO: When plotting multiple selected plots, remove the title bar.
 #TODO: Editmetadata button activates even when a different item is single clicked, which does not load that item. The previous item is still active.
 #TODO: Add converter program into GUI
 #TODO: in multiple loops, loop number 10 comes after 1, instead of coming after 9.
@@ -42,10 +41,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 class MplCanvas(FigureCanvasQTAgg):
 
     def __init__(self, parent=None, width=5, height=4, dpi=100):
-        fig = Figure(figsize=(width, height), dpi=dpi)
-        fig.set_tight_layout(True)
-        self.ax = fig.add_subplot(111)
-        super(MplCanvas, self).__init__(fig)
+        self.fig = Figure(figsize=(width, height), dpi=dpi)
+        self.fig.set_tight_layout(True)
+        self.ax = self.fig.add_subplot(111)
+        super(MplCanvas, self).__init__(self.fig)
 
 def h5load(store, keyName):
     data = store[keyName]
@@ -132,13 +131,13 @@ class itemDetail:
             self.data.plot(x=self.xAxis,y=self.yAxis, ax=canvas.ax,
                            ylabel = self.data.columns[self.yAxis], legend = False, title = title)
         else:
-            scatter = canvas.ax.scatter(self.xAx, self.data.iloc[:,5], c = self.pointLabels, s = 3**2)
+            scatter = canvas.ax.scatter(self.xAx, self.data.iloc[:,5], c = self.pointLabels)
             canvas.ax.set_title(title)
             if vlegend:
                 canvas.ax.set_xlabel("Pulse Number")
                 canvas.ax.set_ylabel(self.data.columns[5])
                 legend1 = canvas.ax.legend(*scatter.legend_elements(fmt="{x:.2f} V"),
-                        loc="upper right", title="Applied Voltages")
+                        loc="upper right", title="Applied Voltages", fontsize=6, title_fontsize=6)
                 legend1.set_draggable(state=True)
                 canvas.ax.add_artist(legend1)
 
@@ -160,7 +159,7 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
         self.addPlotButton.clicked.connect(self.openFile)
         self.plotTree.installEventFilter(self)
         self.plotTree.itemChanged.connect(self.itemSelected)
-        self.plotTree.itemDoubleClicked.connect(self.showItem)
+        self.plotTree.currentItemChanged.connect(self.showItem)
         self.plotSelectedButton.clicked.connect(self.plotSelected)
         self.clearPlotButton.clicked.connect(self.clearPlot)
         self.clearExperimentButton.clicked.connect(self.clearExperiment)
@@ -286,12 +285,8 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
     def eventFilter(self, obj, event):
         if obj == self.plotTree:
             if event.type() == QtCore.QEvent.KeyPress:
-                if event.key() == QtCore.Qt.Key_Return:
-                    self.showItem(self.plotTree.currentItem(),0)
-                elif event.key() == QtCore.Qt.Key_Delete:
+                if event.key() == QtCore.Qt.Key_Delete:
                     self.deleteItem(self.plotTree.currentItem())
-                elif event.key() == QtCore.Qt.Key_Up or event.key() == QtCore.Qt.Key_Down:
-                    self.disableMetadata()
         return super(app_Plotter, self).eventFilter(obj, event)
 
     def deleteItem(self, item):
@@ -307,11 +302,32 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
             self.plotTree.takeTopLevelItem(index)
 
     def showItem(self, item, column):
+        self.disableMetadata()
+        self.metaDataComments.blockSignals(True)
         if item.childCount() != 0:
+            metadata = self.plotTree.currentItem().child(0).item.metadata.copy()
+            comments = metadata.pop("Comments") + '\n'
+            self.metaDataComments.setText(comments)
+            text = ""
+            i = 0
+            for key, value in metadata.items():
+                if isinstance(value, datetime):
+                    value = value.strftime("%m/%d/%Y, %H:%M:%S")
+                elif not isinstance(value, str):
+                    value = str(value)
+                if i % 2:
+                    sep = '; \n'
+                else:
+                    sep = '; \t'
+                text += (key + ': ' + value + sep)
+                i += 1
+            self.metaDataFixed.setText(text)
+            self.sc.ax.cla()
+            self.sc.draw()
             return
         # Display the metadata
         metadata = self.plotTree.currentItem().item.metadata.copy()
-        comments = "Comments: " + metadata.pop("Comments") + '\n'
+        comments = metadata.pop("Comments") + '\n'
         self.metaDataComments.setText(comments)
         text = ""
         i = 0
@@ -341,6 +357,7 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
         self.invyTool.setChecked(False)
         self.gridTool.setChecked(False)
         self.recipyTool.setChecked(False)
+        self.metaDataComments.blockSignals(False)
 
     def itemSelected(self, item, column):
         """
@@ -475,6 +492,8 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
             self.metaDataComments.setEnabled(False)
 
     def editMetadata(self):
+        if self.plotTree.currentItem().childCount() != 0:
+            return
         if len(self.plotTree.selectedItems()) > 0:
             if self.editMetadataButton.text() == "Edit Metadata":
                 self.editMetadataButton.setText("Finish Editing Metadata")
@@ -655,14 +674,34 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
             for i in range(len(plotItems)):
                 plotitem = plotItems[i]
                 item = plotitem.item
-                data = item.data
+                metadata = item.metadata.copy()
+                text = ""
+                i = 0
+                for key, value in metadata.items():
+                    if isinstance(value, datetime):
+                        value = value.strftime("%m/%d/%Y, %H:%M:%S")
+                    elif not isinstance(value, str):
+                        value = str(value)
+                    if key == "Comments":
+                        text += "\n"
+                        sep = "; \n"
+                        i -= 1
+                    elif i % 2:
+                        sep = '; \n'
+                    else:
+                        sep = '; \t'
+                    text += (key + ': ' + value + sep)
+                    i += 1
                 name = item.name.split('/')[0]
                 folderName = "".join(name.split('_')[:-2])
                 filename = path + '\\' + folderName + '\\' + item.name + ext
                 pathName = Path(filename)
                 self.sc.ax.cla()
                 item.plot(self.sc)
+                lineNo = text.count('\n')
                 if ext == '.pdf':
+                    self.sc.fig.subplots_adjust(top=0.8)
+                    self.sc.ax.text(0.05, 1 - 0.2*lineNo/10, text, transform=self.sc.fig.transFigure, size=4)
                     pdf.savefig(self.sc.figure)
                 else:
                     if not pathName.parent.exists():
