@@ -7,16 +7,13 @@ import pandas as pd
 from tables import exceptions
 import re
 
-import warnings
-from tables import NaturalNameWarning
-warnings.filterwarnings('ignore', category=NaturalNameWarning)
-
 #TODO check if removing unicode characters from filename affects hdf5 file losing any stored data, due to same experiment name.
 def h5store(filename, df, keyName, mode, **kwargs):
     store = pd.HDFStore(filename, mode=mode)
     store.put(keyName, df)
     store.get_storer(keyName).attrs.metadata = kwargs
     store.close()
+
 
 def get_Measurement_list(folderPath):
     """
@@ -40,10 +37,7 @@ def get_Measurement_list(folderPath):
     allFileList = list(filter(os.path.isfile, glob.glob(folderPath + '\\*.*')))
     allFile_mtime = [os.path.getmtime(file) for file in allFileList]
     for i,file in enumerate(allFileList):
-        if '_Switch' in file or \
-                '_RV' in file or \
-                '_Retention' in file or \
-                '_Fatigue' in file:
+        if '_Switch' in file or '_RV' in file or '_Retention' in file:
             if file.endswith('.csv'):
                 os.rename(file, file[:-4] + '.dat')
                 file = file[:-4] + '.dat'
@@ -146,12 +140,14 @@ def load_general_file(file):
     :return: metadata, headers and data
     """
     comments = []
-    experimentData = []
+    formingData = []
     with open(file, 'r') as f:
         lines = f.readlines()
         for line in lines:
             line = line.strip()
-            if '#' in line:
+            if line == "":
+                continue
+            elif '#' in line:
                 if '\t' in line:
                     headers = line.replace("#",'').strip().split('\t')
                 else:
@@ -165,10 +161,10 @@ def load_general_file(file):
                     data_point = [float(x) for x in line.split('\t')]
                 except:
                     print(f"Error in {file}")
-                experimentData.append(np.array(data_point))
+                formingData.append(np.array(data_point))
         if headers:
             headers = [h.strip() for h in headers]
-    return extract_metadata(comments), headers, experimentData
+    return extract_metadata(comments), headers, formingData                
 
 def load_IV_file(file):
     """
@@ -259,22 +255,24 @@ def create_hdf_file(experimentName, experimentList):
     None.
 
     """
-    mode = 'a'
+    mode = 'w'
     regex = r'[^A-Za-z0-9_:./\-\\]'
     # if you want to append new data into existing file, set mode to append.
     # else overwrite the data into a fresh file.
     # It is okay to check only the first file, because experimentList contains oldest file first.
     file = experimentList[0]
     pathname = file.replace(file.split('\\')[-1],'')
-    fileName = file[:-4].split('\\')[-1]  # remove .dat from filename
     if os.path.isfile(pathname+experimentName+'.h5'):
         store = pd.HDFStore(pathname+experimentName+'.h5')
         fnames = store.keys()
         for f in fnames:
-            if fileName == f.split('/')[1]:
-                mode = 'w'
-                store.close()
+            if file == f.split('/')[1]:
+                mode = 'a'
                 break
+    else:
+        mode = 'a'
+    if mode == 'w':
+        store.close()
     for file in experimentList:
         created_time = os.path.getctime(file)
         modified_time = os.path.getmtime(file)
@@ -302,7 +300,6 @@ def create_hdf_file(experimentName, experimentList):
                 except ValueError:
                     print(headers)
                 h5store(pathname+experimentName+'.h5', df, keyName, mode, **metadata)
-                mode = 'a'
                 loopNo += 1
         elif '_RV' in file:
             general_metadata["measurement"] = "RV"
@@ -318,7 +315,6 @@ def create_hdf_file(experimentName, experimentList):
                 metadata["Loop number"] = loopNo
                 df = pd.DataFrame(data=loop, columns=headers)
                 h5store(pathname+experimentName+'.h5', df, keyName, mode, **metadata)
-                mode = 'a'
                 loopNo += 1
         else:
             if '_Switch' in file:
@@ -338,7 +334,7 @@ def create_hdf_file(experimentName, experimentList):
 if __name__ == "__main__":
     # delete any preexisting hdf file before running this program
     # It will not rewrite the hdf file, but will append the file
-    path = "D:\\tadaki"
+    path = "D:\\ttest"
     pathname = os.path.normpath(path)
 
     for root, dirs, files in os.walk(pathname):

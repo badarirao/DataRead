@@ -75,7 +75,7 @@ class itemDetail:
             self.xAxis = 0
             self.yAxis = 4
         elif '_Switch' in self.name:
-            n = self.data.iloc[:,[0]].copy() # copy pulse voltage column into n
+            n = self.data.loc[:,["Pulse Voltage (V)", "Read Voltage (V)", "Pulse Width (ms)", "Compliance current (A)"]].copy() # copy relevant cluster identification columns
             c = np.ones(len(n))
             n['c']=c
             inertia = 1000
