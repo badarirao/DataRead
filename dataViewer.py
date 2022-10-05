@@ -786,6 +786,7 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
         path = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select the data directory (even sub-directories will be converted)')
         pathname = os.path.normpath(path)
         error_directories = []
+        self.statusBar().showMessage("Processing data, please wait.")
         for root, dirs, files in os.walk(pathname):
             list_of_experiments, experiment_names = get_Measurement_list(root)
             if experiment_names:
@@ -798,6 +799,7 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
                         print("Got HDF5 Error for {}".format(experiment_names[i]))
                         print('most likely, there is some problem with the folder name. Please correct it')
                         pass
+        self.statusBar().showMessage("")
         if not error_directories:
             QtWidgets.QMessageBox.information(self, "Finished processing", "Finished converting all data into H5 format.\n"
                                                               "All files with same base-name are clubbed into one file.\n"
