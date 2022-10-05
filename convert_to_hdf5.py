@@ -110,7 +110,22 @@ def extract_metadata(comments):
     general_comment = []
     metadata = {}
     for comment in comments:
-        if ',' in comment:
+        if ':' in comment:
+            metD = comment.split(':')
+            if len(metD) == 2:
+                if metD[1] != '':
+                    metadata[metD[0].replace('#','').strip()] = metD[1].strip().replace(' ',' ,')
+                else:
+                    general_comment.append(":".join(metD))
+            else:
+                general_comment.append(":".join(metD))
+        elif '=' in comment:
+            metD = comment.split('=')
+            if len(metD) == 2:
+                metadata[metD[0].replace('#', '').strip()] = metD[1].strip()
+            else:
+                general_comment.extend("=".join(metD))
+        elif ',' in comment:
             cparts = comment.split(',')
             for c in cparts:
                 if '=' in c:
@@ -119,21 +134,9 @@ def extract_metadata(comments):
                         metadata[metD[0].replace(
                             '#', '').strip()] = metD[1].strip()
                     else:
-                        general_comment.append(metD)
+                        general_comment.extend("=".join(metD))
                 else:
                     general_comment.append(c)
-        elif '=' in comment:
-            metD = comment.split('=')
-            if len(metD) == 2:
-                metadata[metD[0].replace('#', '').strip()] = metD[1].strip()
-            else:
-                general_comment.append(metD)
-        elif ':' in comment:
-            metD = comment.split(':')
-            if len(metD) == 2:
-                metadata[metD[0].replace('#','').strip()] = metD[1].strip().replace(' ',' ,')
-            else:
-                general_comment.append(metD)
         else:
             general_comment.append(comment)
     metadata["Comments"] = '\n'.join(general_comment)
@@ -190,6 +193,13 @@ def load_general_file(file):
                 comments.append(f"Compliance current set: {uniqueCCs}")
             except:
                 pass
+            try:
+                indexV = headers.index("Pulse Voltage (V)")
+                uniqueVs = ', '.join(map(str,np.unique(formingData[:,indexV])))
+                comments.append(f"Set Pulse voltage: {uniqueVs}")
+            except:
+                pass
+
     return extract_metadata(comments), headers, formingData                
 
 def load_IV_file(file):

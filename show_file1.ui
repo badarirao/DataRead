@@ -410,7 +410,7 @@
      <x>0</x>
      <y>0</y>
      <width>1403</width>
-     <height>38</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -452,7 +452,7 @@
     <addaction name="actionAdd_data"/>
     <addaction name="actionSave_File"/>
     <addaction name="separator"/>
-    <addaction name="actionGenerate_Report"/>
+    <addaction name="action_createh5"/>
     <addaction name="separator"/>
     <addaction name="menuExport"/>
     <addaction name="separator"/>
@@ -476,9 +476,9 @@
     <string>Save As</string>
    </property>
   </action>
-  <action name="actionGenerate_Report">
+  <action name="action_createh5">
    <property name="text">
-    <string>Generate Report</string>
+    <string>Merge all data into H5</string>
    </property>
   </action>
   <action name="actionExit">

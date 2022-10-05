@@ -8,12 +8,14 @@ Then add each item into the listwidget, that will be easier and also neat.
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from showFile import Ui_Plotter
+from convert_to_hdf5 import get_Measurement_list, create_hdf_file
 import pandas as pd
 import os
 import numpy as np
 from datetime import datetime
 from sklearn.cluster import KMeans
 from pathlib import Path
+from tables import exceptions
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -37,6 +39,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 #TODO: In comment section of switch experiment, add information about pulse width, limiting current, etc.
 #TODO: The horizontal scrollbar for listwidget does not show the full text of the item. Needs some adjustment.
 #TODO: Maybe it is better to display plot just by single click?
+#TODO: make separate file which modifies the GUI size appropriate to that PC. This file is unique for each PC and is not synchronized by github. Maybe a template can exist in github.
 
 class MplCanvas(FigureCanvasQTAgg):
 
@@ -173,6 +176,8 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
         self.actionAdd_data.setShortcut(QtGui.QKeySequence('Ctrl+a'))
         self.actionSave_File.triggered.connect(self.saveData)
         self.actionSave_File.setShortcut(QtGui.QKeySequence('Ctrl+s'))
+        self.action_createh5.triggered.connect(self.createH5)
+        self.action_createh5.setShortcut(QtGui.QKeySequence('Ctrl+g'))
         self.actionAs_txt.triggered.connect(self.save_active_as_txt)
         self.actionAs_txt.setShortcut(QtGui.QKeySequence('Ctrl+Shift+t'))
         self.actionAs_PNG.triggered.connect(self.save_active_as_PNG)
@@ -760,6 +765,22 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
         if len(item.name) > self.maxlen:
             self.plotTree.resizeColumnToContents(len(self.items)-1)
             self.maxlen = len(item.name)
+
+    def createH5(self):
+        path = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select the data directory (even sub-directories will be converted)')
+        pathname = os.path.normpath(path)
+        for root, dirs, files in os.walk(pathname):
+            list_of_experiments, experiment_names = get_Measurement_list(root)
+            if experiment_names:
+                for i in range(len(experiment_names)):
+                    try:
+                        create_hdf_file(experiment_names[i], list_of_experiments[i])
+                    except exceptions.HDF5ExtError as e:
+                        print(e)
+                        print("Got HDF5 Error for {}".format(experiment_names[i]))
+                        print('most likely, there is some problem with the folder name. Please correct it')
+                        pass
+
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
