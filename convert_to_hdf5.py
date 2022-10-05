@@ -119,12 +119,6 @@ def extract_metadata(comments):
                     general_comment.append(":".join(metD))
             else:
                 general_comment.append(":".join(metD))
-        elif '=' in comment:
-            metD = comment.split('=')
-            if len(metD) == 2:
-                metadata[metD[0].replace('#', '').strip()] = metD[1].strip()
-            else:
-                general_comment.extend("=".join(metD))
         elif ',' in comment:
             cparts = comment.split(',')
             for c in cparts:
@@ -137,6 +131,12 @@ def extract_metadata(comments):
                         general_comment.extend("=".join(metD))
                 else:
                     general_comment.append(c)
+        elif '=' in comment:
+            metD = comment.split('=')
+            if len(metD) == 2:
+                metadata[metD[0].replace('#', '').strip()] = metD[1].strip()
+            else:
+                general_comment.extend("=".join(metD))
         else:
             general_comment.append(comment)
     metadata["Comments"] = '\n'.join(general_comment)
@@ -168,9 +168,9 @@ def load_general_file(file):
             else:
                 try:
                     data_point = [float(x) for x in line.split('\t')]
+                    formingData.append(np.array(data_point))
                 except:
                     print(f"Error in {file}")
-                formingData.append(np.array(data_point))
         formingData = np.array(formingData)
         if headers:
             headers = [h.strip() for h in headers]

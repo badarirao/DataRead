@@ -234,7 +234,9 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
                     item.item.plot(self.sc)
                     legend_names.append(item.item.name)
                 if len(legend_names) > 1:
-                    leg = self.sc.ax.legend(legend_names, loc='upper left')
+                    if len(legend_names) > 6:
+                        legend_names = legend_names[:3] + legend_names[-3:]
+                    leg = self.sc.ax.legend(legend_names, loc='upper left', fontsize = 6)
                     leg.set_draggable(state=True)
             self.logyTool.setChecked(False)
             self.sc.ax.set_yscale('linear')
@@ -250,7 +252,9 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
                     item.item.plot(self.sc)
                     legend_names.append(item.item.name)
                 if len(legend_names) > 1:
-                    leg = self.sc.ax.legend(legend_names, loc='lower left')
+                    if len(legend_names) > 6:
+                        legend_names = legend_names[:3] + legend_names[-3:]
+                    leg = self.sc.ax.legend(legend_names, loc='lower left', fontsize = 6)
                     leg.set_draggable(state=True)
             self.linyTool.setChecked(False)
             self.sc.ax.set_yscale('log')
@@ -307,6 +311,8 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
             self.plotTree.takeTopLevelItem(index)
 
     def showItem(self, item, column):
+        if not item:
+            return
         self.disableMetadata()
         self.metaDataComments.blockSignals(True)
         if item.childCount() != 0:
@@ -456,7 +462,9 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
             legend_location = 'upper left'
             if graphType == '_IV':
                 legend_location = 'lower left'
-            leg = self.sc.ax.legend(legend_names, loc=legend_location)
+            if len(legend_names) > 6:
+                legend_names = legend_names[:3] + legend_names[-3:]
+            leg = self.sc.ax.legend(legend_names, loc=legend_location, fontsize = 6)
             leg.set_draggable(state=True)
             self.sc.draw()
 
@@ -718,6 +726,14 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
         else:
             self.statusBar().showMessage("No data in list for saving", 3000)
 
+    def getNum_from_string(self, name):
+        i = -1
+        while name[i].isdigit():
+            i -= 1
+        if i == -1:
+            return 0
+        return int(name[i+1:])
+
     def addData(self, file):
         # if the file is an hdf5 file, then it will have many plots within, so take care of it accordingly
         # if it is a single plot file, the do further analysis of the file
@@ -733,7 +749,7 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
                 for expt in fnames:
                     item = itemDetail(store, expt)
                     currentItems.append(item)
-                currentItems.sort(key=lambda x: x.metadata['timestamp'])
+                currentItems.sort(key=lambda x: (x.metadata['timestamp'], self.getNum_from_string(x.name)))
                 self.items.extend(currentItems)
                 for item in currentItems:
                     self.add_to_list(item)
@@ -769,6 +785,7 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
     def createH5(self):
         path = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select the data directory (even sub-directories will be converted)')
         pathname = os.path.normpath(path)
+        error_directories = []
         for root, dirs, files in os.walk(pathname):
             list_of_experiments, experiment_names = get_Measurement_list(root)
             if experiment_names:
@@ -776,11 +793,21 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
                     try:
                         create_hdf_file(experiment_names[i], list_of_experiments[i])
                     except exceptions.HDF5ExtError as e:
+                        error_directories.append(experiment_names[i])
                         print(e)
                         print("Got HDF5 Error for {}".format(experiment_names[i]))
                         print('most likely, there is some problem with the folder name. Please correct it')
                         pass
-
+        if not error_directories:
+            QtWidgets.QMessageBox.information(self, "Finished processing", "Finished converting all data into H5 format.\n"
+                                                              "All files with same base-name are clubbed into one file.\n"
+                                                              "You can add or remove data later from the list.\n"
+                                                              "Click on 'Add data' to add and visualize the data",
+                                QtWidgets.QMessageBox.Ok)
+        else:
+            dirlists = '\n'.join(error_directories)
+            QtWidgets.QMessageBox.warning(self, "Finished processing, following directories had errors:\n",
+                                              f"{dirlists}\n Contact Badari to resolve the problem.", QtWidgets.QMessageBox.Ok)
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
