@@ -8,6 +8,7 @@ Then add each item into the listwidget, that will be easier and also neat.
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from showFile import Ui_Plotter
+from modifyGUI import change_dimensions
 from convert_to_hdf5 import get_Measurement_list, create_hdf_file
 import pandas as pd
 import os
@@ -40,6 +41,8 @@ from matplotlib.backends.backend_pdf import PdfPages
 #TODO: The horizontal scrollbar for listwidget does not show the full text of the item. Needs some adjustment.
 #TODO: Maybe it is better to display plot just by single click?
 #TODO: make separate file which modifies the GUI size appropriate to that PC. This file is unique for each PC and is not synchronized by github. Maybe a template can exist in github.
+#TODO: PlotTree - horizontal scrolling sometimes does not display whole text if it is long.
+#TODO: When resizing, fix toolbar widget and metadata box size. Only change the plot area size. Somehow it is not working convincingly.
 
 class MplCanvas(FigureCanvasQTAgg):
 
@@ -114,6 +117,7 @@ class itemDetail:
             title = self.name
         else:
             title = ""
+        #canvas.fig.rcParams.update({'font.size': 6})
         if '_IV' in self.name:
             if self.logy == False: #Normal IV
                 self.data.plot(x=self.xAxis,y=self.yAxis, ax=canvas.ax,
@@ -276,6 +280,7 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
         self.sc.draw()
 
     def modifyGUI(self):
+        change_dimensions(self)
         self.metaDataComments.setEnabled(False)
         self.metaDataFixed.setEnabled(False)
         width = 300

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1403</width>
-    <height>1290</height>
+    <width>1063</width>
+    <height>896</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
       <property name="maximumSize">
        <size>
         <width>16777215</width>
-        <height>400</height>
+        <height>210</height>
        </size>
       </property>
       <property name="title">
@@ -28,7 +28,14 @@
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
-        <widget class="QTextEdit" name="metaDataFixed"/>
+        <widget class="QTextEdit" name="metaDataFixed">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>100</height>
+          </size>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QTextEdit" name="metaDataComments">
@@ -40,6 +47,12 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>100</height>
+          </size>
          </property>
         </widget>
        </item>
@@ -68,8 +81,8 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>400</width>
-          <height>700</height>
+          <width>200</width>
+          <height>500</height>
          </size>
         </property>
         <property name="toolTip">
@@ -109,7 +122,7 @@
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>100</height>
+          <height>50</height>
          </size>
         </property>
         <property name="frameShape">
@@ -130,8 +143,8 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>0</width>
-          <height>650</height>
+          <width>550</width>
+          <height>500</height>
          </size>
         </property>
         <property name="styleSheet">
@@ -161,7 +174,7 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>100</width>
+          <width>50</width>
           <height>16777215</height>
          </size>
         </property>
@@ -409,7 +422,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1403</width>
+     <width>1063</width>
      <height>21</height>
     </rect>
    </property>
