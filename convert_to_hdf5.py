@@ -178,25 +178,25 @@ def load_general_file(file):
             try:
                 indexRV = headers.index("Read Voltage (V)")
                 uniqueRVs = ', '.join(map(str,np.unique(formingData[:,indexRV])))
-                comments.append(f"Read voltage used: {uniqueRVs}")
+                comments.append(f"Read voltage used (V): {uniqueRVs}")
             except:
                 pass
             try:
                 indexPW = headers.index("Pulse Width (ms)")
-                uniquePWs = ', '.join(map(str,np.unique(formingData[:,indexPW])))
-                comments.append(f"Pulse width used: {uniquePWs}")
+                uniquePWs = ', '.join(map(str,np.round(np.unique(formingData[:,indexPW])*1000,3)))
+                comments.append(f"Pulse width used (ms): {uniquePWs}")
             except:
                 pass
             try:
                 indexCC = headers.index("Compliance current (A)")
-                uniqueCCs = ', '.join(map(str,np.unique(formingData[:,indexCC])))
-                comments.append(f"Compliance current set: {uniqueCCs}")
+                uniqueCCs = ', '.join(map(str,np.unique(formingData[:,indexCC])*1000))
+                comments.append(f"Compliance current set (mA): {uniqueCCs}")
             except:
                 pass
             try:
                 indexV = headers.index("Pulse Voltage (V)")
                 uniqueVs = ', '.join(map(str,np.unique(formingData[:,indexV])))
-                comments.append(f"Set Pulse voltage: {uniqueVs}")
+                comments.append(f"Set Pulse voltage (V): {uniqueVs}")
             except:
                 pass
 
@@ -254,12 +254,13 @@ def load_RV_file(file):
     comments = []
     allLoopsData = []
     oneLoopData = []
+    headers = []
     finishedOneCycle = False
     with open(file, 'r') as f:
         lines = f.readlines()
         for line in lines:
             line = line.strip()
-            if line.startswith('#'):
+            if line.startswith('##'):
                 comments.append(line[2:].strip())
             elif 'Cycle' in line:
                 if finishedOneCycle:
