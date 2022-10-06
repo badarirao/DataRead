@@ -371,7 +371,7 @@ def create_hdf_file(experimentName, experimentList):
 if __name__ == "__main__":
     # delete any preexisting hdf file before running this program
     # It will not rewrite the hdf file, but will append the file
-    path = "D:\AFO6006"
+    path = "D:\Ttest"
     pathname = os.path.normpath(path)
 
     for root, dirs, files in os.walk(pathname):
