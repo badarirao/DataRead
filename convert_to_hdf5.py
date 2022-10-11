@@ -37,10 +37,12 @@ def get_Measurement_list(folderPath):
     allFileList = list(filter(os.path.isfile, glob.glob(folderPath + '\\*.*')))
     allFile_mtime = [os.path.getmtime(file) for file in allFileList]
     for i,file in enumerate(allFileList):
-        if '_Switch' in file or '_RV' in file or '_Retention' in file:
-            if file.endswith('.csv'):
+        if '_Switch' in file or '_RV' in file or '_Retention' in file or '_IV' in file:
+            if file.endswith('.csv') or file.endswith('.txt'):
                 os.rename(file, file[:-4] + '.dat')
                 file = file[:-4] + '.dat'
+            elif not file.endswith('.dat'):
+                continue
             with open(file, 'r') as f:
                 lines = f.readlines()
                 newlines = []
@@ -227,9 +229,15 @@ def load_IV_file(file):
                 finishedOneCycle = True
             elif 'voltage' in line.lower() or 'current' in line.lower():
                 headers = line.replace('#', '').split('\t')
+                if '' in headers:
+                    headers.remove('')
             else:
-                data_point = [float(x) for x in line.split('\t')]
-                oneLoopData.append(data_point)
+                try:
+                    data_point = [float(x) for x in line.split('\t') if x]
+                    oneLoopData.append(data_point)
+                except Exception as e:
+                    print(file, line)
+                    raise(Exception)
         if oneLoopData:
             allLoopsData.append(np.array(oneLoopData))
     return extract_metadata(comments), headers, allLoopsData
@@ -326,6 +334,7 @@ def create_hdf_file(experimentName, experimentList):
             metadata["Actual cycles measured"] = len(ivloops)
             metadata = {**general_metadata, **metadata} # merge the two metadatas
             loopNo = 1
+            df = None
             for loop in ivloops:
                 if len(ivloops) > 1:
                     keyName = fileName + '/loop_' + str(loopNo)
@@ -336,8 +345,9 @@ def create_hdf_file(experimentName, experimentList):
                     df = pd.DataFrame(data=loop, columns=headers)
                 except ValueError:
                     print(headers)
-                h5store(pathname+experimentName+'.h5', df, keyName, mode, **metadata)
-                loopNo += 1
+                if df is not None:
+                    h5store(pathname+experimentName+'.h5', df, keyName, mode, **metadata)
+                    loopNo += 1
         elif '_RV' in file:
             general_metadata["measurement"] = "RV"
             metadata, headers, rvloops = load_RV_file(file)
@@ -371,7 +381,7 @@ def create_hdf_file(experimentName, experimentList):
 if __name__ == "__main__":
     # delete any preexisting hdf file before running this program
     # It will not rewrite the hdf file, but will append the file
-    path = "D:\Ttest"
+    path = "D:\\21.06.17\\a1"
     pathname = os.path.normpath(path)
 
     for root, dirs, files in os.walk(pathname):
