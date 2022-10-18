@@ -5,6 +5,8 @@ Then add each item into the listwidget, that will be easier and also neat.
 
 """
 
+#TODO remember last used location
+
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from showFile import Ui_Plotter
@@ -308,7 +310,10 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
             for i in range(item.childCount()):
                 self.items.remove(item.child(i).item)
         else:
-            self.items.remove(item.item)
+            try:
+                self.items.remove(item.item)
+            except:
+                pass
         if item.parent():
             item.parent().removeChild(item)
         else:
@@ -342,6 +347,8 @@ class app_Plotter(QtWidgets.QMainWindow,Ui_Plotter):
             self.sc.draw()
             return
         # Display the metadata
+        if not hasattr(self.plotTree.currentItem(), 'item'):
+            return
         metadata = self.plotTree.currentItem().item.metadata.copy()
         comments = metadata.pop("Comments") + '\n'
         self.metaDataComments.setText(comments)

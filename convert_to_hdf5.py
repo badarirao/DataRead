@@ -8,6 +8,8 @@ from tables import exceptions
 import re
 
 #TODO check if removing unicode characters from filename affects hdf5 file losing any stored data, due to same experiment name.
+#TODO if all childitems are deleted, delete the parent item also. Currently it is giving error.
+
 def h5store(filename, df, keyName, mode, **kwargs):
     store = pd.HDFStore(filename, mode=mode)
     store.put(keyName, df)
@@ -176,6 +178,9 @@ def load_general_file(file):
         formingData = np.array(formingData)
         if headers:
             headers = [h.strip() for h in headers]
+        else:
+            print("Headers is empty")
+            print(f"Filename: {file}")
         if "_Switch" in file:
             try:
                 indexRV = headers.index("Read Voltage (V)")
@@ -275,8 +280,10 @@ def load_RV_file(file):
                     allLoopsData.append(np.array(oneLoopData))
                     oneLoopData = []
                     finishedOneCycle = False
-            elif 'voltage' in line.lower() or 'current' in line.lower():
+            elif 'voltage' in line.lower() and 'current' in line.lower():
                 headers = line.replace('#', '').split('\t')
+            elif line.startswith('#'):
+                comments.append(line[1:].strip())
             elif not line:
                 finishedOneCycle = True
             else:
@@ -311,7 +318,7 @@ def create_hdf_file(experimentName, experimentList):
         store = pd.HDFStore(pathname+experimentName+'.h5')
         fnames = store.keys()
         for f in fnames:
-            if file == f.split('/')[1]:
+            if f.split('/')[1] in file:
                 mode = 'a'
                 break
     else:
@@ -360,9 +367,13 @@ def create_hdf_file(experimentName, experimentList):
                 else:
                     keyName = fileName
                 metadata["Loop number"] = loopNo
-                df = pd.DataFrame(data=loop, columns=headers)
-                h5store(pathname+experimentName+'.h5', df, keyName, mode, **metadata)
-                loopNo += 1
+                try:
+                    df = pd.DataFrame(data=loop, columns=headers)
+                except:
+                    print(f"Problem in {file}")
+                if df is not None:
+                    h5store(pathname+experimentName+'.h5', df, keyName, mode, **metadata)
+                    loopNo += 1
         else:
             if '_Switch' in file:
                 general_metadata["measurement"] = "Switch"
@@ -374,14 +385,16 @@ def create_hdf_file(experimentName, experimentList):
                 general_metadata["measurement"] = "Forming"
             metadata, headers, measureData = load_general_file(file)
             metadata = {**general_metadata, **metadata} # merge the two metadatas
-            df = pd.DataFrame(data=measureData, columns=headers)
-            h5store(pathname+experimentName+'.h5', df, fileName, mode, **metadata)
+            if measureData.size > 0 and headers:
+                df = pd.DataFrame(data=measureData, columns=headers)
+                if df is not None:
+                    h5store(pathname+experimentName+'.h5', df, fileName, mode, **metadata)
         mode = 'a'
 
 if __name__ == "__main__":
     # delete any preexisting hdf file before running this program
     # It will not rewrite the hdf file, but will append the file
-    path = "D:\\21.06.17\\a1"
+    path = "D:\MFTJ_SGFO\\test"
     pathname = os.path.normpath(path)
 
     for root, dirs, files in os.walk(pathname):
