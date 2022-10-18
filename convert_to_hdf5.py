@@ -8,7 +8,6 @@ from tables import exceptions
 import re
 
 #TODO check if removing unicode characters from filename affects hdf5 file losing any stored data, due to same experiment name.
-#TODO if all childitems are deleted, delete the parent item also. Currently it is giving error.
 
 def h5store(filename, df, keyName, mode, **kwargs):
     store = pd.HDFStore(filename, mode=mode)
