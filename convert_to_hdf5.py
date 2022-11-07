@@ -7,6 +7,10 @@ import pandas as pd
 from tables import exceptions
 import re
 
+import warnings
+from tables import NaturalNameWarning
+warnings.filterwarnings('ignore', category=NaturalNameWarning)
+
 #TODO check if removing unicode characters from filename affects hdf5 file losing any stored data, due to same experiment name.
 
 def h5store(filename, df, keyName, mode, **kwargs):
@@ -173,7 +177,8 @@ def load_general_file(file):
                     data_point = [float(x) for x in line.split('\t')]
                     formingData.append(np.array(data_point))
                 except:
-                    print(f"Error in {file}")
+                    print(f"Error in {file}. Data line should not contain text.")
+                    break
         formingData = np.array(formingData)
         if headers:
             headers = [h.strip() for h in headers]
@@ -384,16 +389,18 @@ def create_hdf_file(experimentName, experimentList):
                 general_metadata["measurement"] = "Forming"
             metadata, headers, measureData = load_general_file(file)
             metadata = {**general_metadata, **metadata} # merge the two metadatas
-            if measureData.size > 0 and headers:
+            if measureData.shape[1] == len(headers):
                 df = pd.DataFrame(data=measureData, columns=headers)
                 if df is not None:
                     h5store(pathname+experimentName+'.h5', df, fileName, mode, **metadata)
+            else:
+                print(f"Problem with: {file}. Header length and data not matching. Please check it.")
         mode = 'a'
 
 if __name__ == "__main__":
     # delete any preexisting hdf file before running this program
     # It will not rewrite the hdf file, but will append the file
-    path = "D:\MFTJ_SGFO\\test"
+    path = "D:\AFO\\Tadaki\\21.11.22"
     pathname = os.path.normpath(path)
 
     for root, dirs, files in os.walk(pathname):
