@@ -17,7 +17,7 @@
  - You can add multiple .h5 files into the list.
  - You can delete or reorder the data in the list and save the new list as a new .h5 file. 
    This is useful to remove unwanted data from your file, and create a new file with only important data.
- - You can change the x and y axis scales to linear or log, and you can also inverse the axis.
+ - You can change the x and y axis scales to linear or log, and you can also reverse the axis direction.
  - You can add additional details into the metadata section.
  - You can export the plots either individually or together as text, png, jpg, tiff or pdf files.
  
