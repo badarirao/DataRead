@@ -3,8 +3,8 @@
  Feel free to contact me at badari.rao@gmail.com for any help with installation, or code modification to apply it for your datasets.
  
  ## Software capabilities
-  It first combines all the available files in the specified folder to an HDF5 file, and separates the metadata, and each loop data.
- Then, the user can load the generated HDF5 file into the software to visualize each of the data.
+  It first combines all the available files in the specified folder to an H5 file, and separates the metadata, and each loop data.
+ Then, the user can load the generated H5 file into the software to visualize each of the data.
  
  The software tries to arrange the data according to the creation time as much as possible.
  
