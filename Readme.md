@@ -1,5 +1,6 @@
 # DataRead
- DataRead is a gui software to visualize all the data generated from the ReRam software. 
+ DataRead is a gui software to visualize all the data generated from the ReRam software.
+ Feel free to contact me at badari.rao@gmail.com for any help with installation, or code modification to apply it for your datasets.
  
  ## Software capabilities
   It first combines all the available files in the specified folder to an HDF5 file, and separates the metadata, and each loop data.
